@@ -1,5 +1,5 @@
 /*
- * music.c - Make the screen rainbow
+ * rainbow.c - Make the screen rainbow
  */
 /*
 avr-gcc -DF_CPU=16000000UL -mmcu=atmega328p -Wall -o rainbow.out rainbow.c

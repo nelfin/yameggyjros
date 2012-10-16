@@ -20,24 +20,55 @@ static inline void fill_screen(uint8_t colour) {
     }
 }
 
+static inline void fill_column(uint8_t col, uint8_t colour) {
+    uint8_t j;
+    for (j = 0; j < 8; j++) {
+        rgb_screen[col][j] = (pixel_t) colour;
+    }
+}
 int main(void) {
     uint8_t lights = 0x1u;
+    uint8_t col;
 
     initialise_screen();
 
     while (1) {
-        status_lights = lights;
-        lights = (lights << 1) | (lights >> 7);
-        fill_screen(caaffff);
-        delay(200);
-        fill_screen(c000000);
-        delay(200);
-        fill_screen(c550000);
-        delay(200);
-        fill_screen(caa0000);
-        delay(200);
-        fill_screen(cff0000);
-        delay(200);
+        for (col = 0; col < 8; col++) {
+            status_lights = lights;
+            lights = (lights << 1) | (lights >> 7);
+            fill_column(col, cff0000);
+            delay(20);
+        }
+        for (col = 0; col < 8; col++) {
+            status_lights = lights;
+            lights = (lights << 1) | (lights >> 7);
+            fill_column(col, cffff00);
+            delay(20);
+        }
+        for (col = 0; col < 8; col++) {
+            status_lights = lights;
+            lights = (lights << 1) | (lights >> 7);
+            fill_column(col, c00ff00);
+            delay(20);
+        }
+        for (col = 0; col < 8; col++) {
+            status_lights = lights;
+            lights = (lights << 1) | (lights >> 7);
+            fill_column(col, c00ffff);
+            delay(20);
+        }
+        for (col = 0; col < 8; col++) {
+            status_lights = lights;
+            lights = (lights << 1) | (lights >> 7);
+            fill_column(col, c0000ff);
+            delay(20);
+        }
+        for (col = 0; col < 8; col++) {
+            status_lights = lights;
+            lights = (lights << 1) | (lights >> 7);
+            fill_column(col, cff00ff);
+            delay(20);
+        }
     }
 
     return 0;

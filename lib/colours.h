@@ -68,6 +68,6 @@
 #define cffffff 0x7fu /* 0b1111111 */
 
 /* Colour values */
-#define vDARK   0x3f  /* 0b0111111 */
+#define vDARK   0x3fu /* 0b0111111 */
 
 #endif

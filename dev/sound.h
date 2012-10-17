@@ -1,22 +1,11 @@
 #ifndef SOUND_H
 #define SOUND_H
 
-#include <avr/io.h>
+/* Number of main loop cycles remaining to play sound */
+static uint16_t tone_duration;
 
-#define PIEZO       PB1
-
-// Piezo data register
-#define PIEZO_DR    PORTB
-// Piezo data direction register
-#define PIEZO_DDR   DDRB
-
-#define PIEZO_ON    (1 << PIEZO)
-#define PIEZO_OFF   (~(1 << PIEZO))
-
-void enable_piezo();
-void disable_piezo();
-void piezo_on();
-void piezo_off();
-void piezo_toggle();
+void enable_sound(void);
+void disable_sound(void);
+void start_primitive_tone(uint16_t denom, uint16_t duration);
 
 #endif

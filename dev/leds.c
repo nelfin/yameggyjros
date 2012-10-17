@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "leds.h"
+#include "sound.h"
 
 /* Set all channels dark */
 static void inline set_dark(void) {
@@ -61,6 +62,13 @@ ISR(TIMER2_COMPA_vect) {
         }
     }
 
+    /* Could there be some way to remove the screen/sound coupling? */
+    if (tone_duration > 0) {
+        tone_duration--;
+        if (tone_duration == 0) {
+            OCR1A = 0;
+        }
+    }
 
     set_dark();
     SPCR = (1 << SPE) | (1 << MSTR);

@@ -30,3 +30,7 @@ void start_primitive_tone(uint16_t denom, uint16_t duration) {
     tone_duration = duration;
     enable_sound();
 }
+
+uint8_t is_sound_playing(void) {
+    return OCR1A > 0;
+}

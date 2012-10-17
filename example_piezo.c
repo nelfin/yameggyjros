@@ -1,27 +1,81 @@
-#include "dev/sound.c"
+#include <avr/io.h>
 
-void delay(uint16_t ms) {
-   uint16_t i,j;
-   uint16_t loop = F_CPU / 17000;  // this is approximate and needs calabration.
-   for (i=0;i<ms;i++) {
-      for (j=0;j<loop;j++);
-   }
-}
+#include "dev/leds.c"
+#include "dev/sound.c"
+#include "lib/music.c"
+
+uint16_t tetris[] = {
+    tB4,   1712,
+    tGs4,  856,
+    tA4,   856,
+    tB4,   856,
+    tD5,   428,
+    tC5,   428,
+    tA4,   856,
+    tGs4,  856,
+    tE4,   1712,
+    tE4,   856,
+    tA4,   856,
+    tC5,   1712,
+    tB4,   856,
+    tA4,   856,
+    tGs4,  856,
+    tE4,   856,
+    tGs4,  856,
+    tA4,   856,
+    tB4,   1712,
+    tC5,   1712,
+    tA4,   1712,
+    tE4,   1712,
+    tE4,   3428,
+    1,     856,
+    tF4,   1712,
+    tA4,   856,
+    tC5,   856,
+    tC5,   428,
+    tC5,   428,
+    tB4,   856,
+    tA4,   856,
+    tG4,   2572,
+    tE4,   856,
+    tG4,   856,
+    tA4,   428,
+    tG4,   428,
+    tF4,   856,
+    tE4,   856,
+    tGs4,  856,
+    tE4,   856,
+    tGs4,  856,
+    tA4,   856,
+    tB4,   1712,
+    tC5,   1712,
+    tA4,   1712,
+    tE4,   1712,
+    tE4,   1712
+};
+
+#define SONG (sizeof(tetris) / sizeof(uint16_t))
 
 int main(void) {
+    uint16_t i;
+    uint8_t keyp;
+
+    DDRC = 0;
+    PORTC = 255U;
+
+    initialise_screen();
     enable_sound();
 
     for (;;) {
-        start_primitive_tone(10000, 500);
-        delay(100);
-        start_primitive_tone(16000, 500);
-        delay(50);
-        start_primitive_tone(12000, 500);
-        delay(150);
-        start_primitive_tone(14500, 500);
-        delay(100);
-        disable_sound();
-        delay(1000);
+        keyp = (~(PINC) & 0x01U);
+        if (keyp) {
+            for (i = 0; i < SONG; i += 2) {
+                play_tone(tetris[i], (float) tetris[i+1]);
+                while (is_sound_playing());
+            }
+        } else {
+            for (i = 0; i < 10000; i++);
+        }
     }
 
     return 0;

@@ -9,6 +9,7 @@ avrdude -b57600 -patmega328p -cstk500v1 -P/dev/ttyUSB0 -U flash:w:rainbow.hex
 
 
 #include <avr/io.h>
+#include "dev/serial.c"
 #define RED 0
 #define PURPLE 1
 #define BLUE 2
@@ -186,6 +187,8 @@ int main() {
     fbLights = 0xAAU;
    
     int iteration = 0;
+    uart_init();
+    uart_putstring("This is a test");
     while (1) {
         drawFrameBuffer();
         int i;

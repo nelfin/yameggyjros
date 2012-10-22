@@ -187,8 +187,8 @@ int main() {
     fbLights = 0xAAU;
    
     int iteration = 0;
-    uart_init();
-    uart_putstring("This is a test");
+    initialise_serial;
+    serial_putstring("This is a test");
     while (1) {
         drawFrameBuffer();
         int i;

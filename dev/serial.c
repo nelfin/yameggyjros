@@ -6,9 +6,14 @@
 
 #include <util/setbaud.h>
 
-// Simple serial output for the meggyjr
-// Eric McCreath 2012  - GPLv3
-void uart_init(void) {
+/*
+Simple serial output for the meggyjr
+Eric McCreath 2012  - GPLv3
+To connect to this ouput, execute
+minicom -b 9600 -D /dev/ttyUSB0
+On a separate terminal
+*/
+void initialise_serial(void) {
     UBRR0H = UBRRH_VALUE;
     UBRR0L = UBRRL_VALUE;
 
@@ -18,15 +23,15 @@ void uart_init(void) {
     UCSR0B = _BV(RXEN0) | _BV(TXEN0);   /* Enable RX and TX */
 }
 
-void uart_putchar(char c) {
+void serial_putchar(char c) {
     loop_until_bit_is_set(UCSR0A, UDRE0); /* Wait until data register empty. */
     UDR0 = c;
 }
 
-void uart_putstring(char s[]) {
+void serial_putstring(char s[]) {
     int len = strlen(s);
     int i;
     for(i=0;i<len;i++){
-        uart_putchar(s[i]);
+        serial_putchar(s[i]);
     }
 }

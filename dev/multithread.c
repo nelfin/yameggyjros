@@ -9,13 +9,14 @@ static int timer_ticks = 0;
 static int swapped_sph_A;
 static int swapped_spl_A;
 
-//static int swapped_sph_B;
-//static int swapped_spl_B;
+static int swapped_sph_B;
+static int swapped_spl_B;
 
 static void (*thread_A)(void);
 static void (*thread_B)(void);
 
 static int thread_A_active;
+static int first_swap;
 
 void init_multithread(void)
 {
@@ -31,14 +32,23 @@ void init_multithread(void)
     sei();         //enable interrupts
     TCCR0B |= (1 << CS02);
     // set prescaler to 256 and start the timer
-
+    
+    //Initialise the bottom half of the stack for our B thread
+    uint16_t thread_B_SP = RAMEND/2;
+    swapped_sph_B = (uint8_t) (thread_B_SP & 0x00ff );
+    swapped_spl_B = (uint8_t) (thread_B_SP & 0xff00 ) >> 8;
+    serial_putdebug("B SP Low",swapped_spl_B);
+    serial_putdebug("B SP High",swapped_sph_B);
+    
+    //Initialise the context tracking booleans
+    thread_A_active = TRUE;
+    first_swap = TRUE;
 }
 
 void execute_parallel(void (*function1)(void),void (*function2)(void))
 {
     thread_A = function1;
     thread_B = function2;
-    thread_A_active = TRUE;
     thread_A();
 }
 
@@ -116,41 +126,54 @@ void execute_parallel(void (*function1)(void),void (*function2)(void))
 
 //naked: tells gcc not to modify the stack while entering this
 ISR(TIMER0_COMPA_vect,ISR_NAKED) {
-
+    //We might be messing up the stack here...
     timer_ticks++;
     timer_ticks = timer_ticks % TIME_SLICE;
+    
+    thread_A_active = !thread_A_active;
     if(timer_ticks==0){
         //----------Context switch----------
         //Keep track of which thread is active
-        thread_A_active = !thread_A_active;
+        //thread_A_active = !thread_A_active;
         
-        //Save the stack pointers to kernel space
-        swapped_sph_A = SPH;
-        swapped_spl_A = SPL;
         
-        //Save the registers to the stack
-        SAVE_CONTEXT();
+        //if(!thread_A_active){
+            /*--- A goes out, B comes in ---*/
+            //Save the stack pointers to kernel space
+            swapped_sph_A = SPH;
+            swapped_spl_A = SPL;
+            
+            //Save the registers to the stack
+            SAVE_CONTEXT();
+            
+            //Make the current stack pointers B's (initially, half way down the stack)
+            SPH = swapped_sph_B;
+            SPL = swapped_spl_B;
+        //}else{
+            /*--- B goes out, A comes in ---
+            //Save the stack pointers to kernel space
+            swapped_sph_B = SPH;
+            swapped_spl_B = SPL;
+            
+            //Save the registers to the stack
+            SAVE_CONTEXT();
+            
+            //Make the current stack pointers B's (initially, half way down the stack)
+            SPH = swapped_sph_A;
+            SPL = swapped_spl_A;*/
+        //}
         
-        //serial_putdebug("RAMEND",RAMEND);
-        
-        //Switch to Thread B by pushing the address to the stack so that reti(); returns to a different place.
-        //Addresses are 2 bytes (14 bits I believe in reality), use unsigned short
-        /*uint16_t thread_B_address = (uint16_t) thread_B;
-        serial_putdebug("B address",thread_B_address);
-        uint8_t thread_B_address_byte_low = (uint8_t) (thread_B_address & 0x00ff );
-        uint8_t thread_B_address_byte_high = (uint8_t) (thread_B_address & 0xff00 ) >> 8;	
-        serial_putdebug("B address high",thread_B_address_byte_high);
-        serial_putdebug("B address low",thread_B_address_byte_low);
-        asm("lds 16, thread_B_address_byte_low");
-        asm("lds 17, thread_B_address_byte_high");
-        asm("push 16");
-        asm("push 17");*/
-        
-        //RESTORE_CONTEXT();
-        //uint8_t *stack_pointer = (uint8_t *) ((SPH << 8 ) | (SPL & 0xff));
-        //*stack_pointer = thread_B_address_byte_low;
-        //*(stack_pointer+1) = thread_B_address_byte_high;
-        //serial_putdebug("stack pointer",stack_pointer);
+        //If it's the first swap, swap to B for the first time by jumping to it.
+        //if(first_swap){
+            //Load thread_B's address into two registers (low and high byte), and push them onto the stack for reti(); to return to
+        asm("lds r24,thread_B");
+        asm("lds r25,thread_B+1");
+        asm("push r24");
+        asm("push r25");
+        //first_swap = FALSE;
+	    //}else{
+	        //RESTORE_CONTEXT();
+	    //}
     }
     reti();
 }

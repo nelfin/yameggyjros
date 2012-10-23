@@ -1,9 +1,10 @@
 #include "serial.h"
 #include <string.h>
 #include <avr/io.h>
+#include <stdlib.h>
 
 #define BAUD 9600
-
+#define MAX_SERIAL_NUMBER_LEN 8
 #include <util/setbaud.h>
 
 /*
@@ -34,4 +35,13 @@ void serial_putstring(char s[]) {
     for(i=0;i<len;i++){
         serial_putchar(s[i]);
     }
+}
+/* Puts and value, with a name, onto serial */
+void serial_putdebug(char s[], int n) {
+    serial_putstring(s);
+    serial_putstring(": ");
+    char buf[MAX_SERIAL_NUMBER_LEN]; //Assume it's going to be <= this number
+    itoa(n, buf, 2);
+    serial_putstring(buf);
+    serial_putchar('\n');
 }

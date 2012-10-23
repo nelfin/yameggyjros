@@ -1,15 +1,26 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "multithread.h"
-#define TIME_SLICE 100 //Arbritrary time units at the moment
 
-int timer_ticks = 0;
-static int sph;
-static int spl;
-int context_pointer;
+#define TIME_SLICE 200 //Arbritrary time units at the moment
+#define TRUE 0
+#define FALSE 1
+static int timer_ticks = 0;
+static int swapped_sph_A;
+static int swapped_spl_A;
+
+//static int swapped_sph_B;
+//static int swapped_spl_B;
+
+static void (*thread_A)(void);
+static void (*thread_B)(void);
+
+static int thread_A_active;
 
 void init_multithread(void)
 {
+    //serial_putdebug("SPH!",SPH);
+    //serial_putdebug("SPL!",SPL);
     /* Prepping Timer 0 (8-bit resolution) for context switching */
 
     // Set the Timer Mode to CTC
@@ -20,16 +31,20 @@ void init_multithread(void)
     sei();         //enable interrupts
     TCCR0B |= (1 << CS02);
     // set prescaler to 256 and start the timer
+
 }
 
 void execute_parallel(void (*function1)(void),void (*function2)(void))
 {
-    function1();
-    function2();
-    serial_putstring("Parallel execution complete\0");
+    thread_A = function1;
+    thread_B = function2;
+    thread_A_active = TRUE;
+    thread_A();
 }
 
 #define SAVE_CONTEXT()\
+    asm("push r0");\
+    asm("in r0, __SREG__");\
     asm("push r0");\
     asm("push r1");\
     asm("push r2");\
@@ -62,11 +77,7 @@ void execute_parallel(void (*function1)(void),void (*function2)(void))
     asm("push r29");\
     asm("push r30");\
     asm("push r31");\
-    //sph = SPH;
-    //spl = SPL;
     
-    //SPH = sph;
-   // SPL = spl;
 #define RESTORE_CONTEXT()\
     asm("pop r31");\
     asm("pop r30");\
@@ -100,19 +111,47 @@ void execute_parallel(void (*function1)(void),void (*function2)(void))
     asm("pop r2");\
     asm("pop r1");\
     asm("pop r0");\
+    asm("out __SREG__, r0");\
+    asm("pop r0");
 
 //naked: tells gcc not to modify the stack while entering this
 ISR(TIMER0_COMPA_vect,ISR_NAKED) {
+
     timer_ticks++;
     timer_ticks = timer_ticks % TIME_SLICE;
     if(timer_ticks==0){
-        serial_putstring(" Timer hit \0");
-        char buf[5];
-        itoa(SREG, buf, 10);
-        serial_putstring(buf);
-        //Context switch
+        //----------Context switch----------
+        //Keep track of which thread is active
+        thread_A_active = !thread_A_active;
+        
+        //Save the stack pointers to kernel space
+        swapped_sph_A = SPH;
+        swapped_spl_A = SPL;
+        
+        //Save the registers to the stack
         SAVE_CONTEXT();
-        RESTORE_CONTEXT();
+        
+        //serial_putdebug("RAMEND",RAMEND);
+        
+        //Switch to Thread B by pushing the address to the stack so that reti(); returns to a different place.
+        //Addresses are 2 bytes (14 bits I believe in reality), use unsigned short
+        /*uint16_t thread_B_address = (uint16_t) thread_B;
+        serial_putdebug("B address",thread_B_address);
+        uint8_t thread_B_address_byte_low = ( thread_B_address & ( uint8_t ) 0x00ff );
+        thread_B_address >>= 8; //Get the next byte
+        uint8_t thread_B_address_byte_high = ( thread_B_address & ( uint8_t ) 0x00ff );
+        serial_putdebug("B address high",thread_B_address_byte_high);
+        serial_putdebug("B address low",thread_B_address_byte_low);
+        asm("lds 16, thread_B_address_byte_low");
+        asm("lds 17, thread_B_address_byte_high");
+        asm("push 16");
+        asm("push 17");*/
+        
+        //RESTORE_CONTEXT();
+        //uint8_t *stack_pointer = (uint8_t *) ((SPH << 8 ) | (SPL & 0xff));
+        //*stack_pointer = thread_B_address_byte_low;
+        //*(stack_pointer+1) = thread_B_address_byte_high;
+        //serial_putdebug("stack pointer",stack_pointer);
     }
     reti();
 }

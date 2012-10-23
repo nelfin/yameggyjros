@@ -41,7 +41,7 @@ void serial_putdebug(char s[], int n) {
     serial_putstring(s);
     serial_putstring(": ");
     char buf[MAX_SERIAL_NUMBER_LEN]; //Assume it's going to be <= this number
-    itoa(n, buf, 2);
+    itoa(n, buf, 16);
     serial_putstring(buf);
     serial_putchar('\n');
 }

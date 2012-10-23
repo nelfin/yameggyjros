@@ -25,6 +25,7 @@ void load_persistent_memory(){
     }
 }
 
+//You don't need to call this, so long as you call load_persistent_memory(); before you want to read from EEPROM
 void initialise_persistent_memory(){
     load_persistent_memory();
 }

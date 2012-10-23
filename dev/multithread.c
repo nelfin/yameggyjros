@@ -137,9 +137,8 @@ ISR(TIMER0_COMPA_vect,ISR_NAKED) {
         //Addresses are 2 bytes (14 bits I believe in reality), use unsigned short
         /*uint16_t thread_B_address = (uint16_t) thread_B;
         serial_putdebug("B address",thread_B_address);
-        uint8_t thread_B_address_byte_low = ( thread_B_address & ( uint8_t ) 0x00ff );
-        thread_B_address >>= 8; //Get the next byte
-        uint8_t thread_B_address_byte_high = ( thread_B_address & ( uint8_t ) 0x00ff );
+        uint8_t thread_B_address_byte_low = (uint8_t) (thread_B_address & 0x00ff );
+        uint8_t thread_B_address_byte_high = (uint8_t) (thread_B_address & 0xff00 ) >> 8;	
         serial_putdebug("B address high",thread_B_address_byte_high);
         serial_putdebug("B address low",thread_B_address_byte_low);
         asm("lds 16, thread_B_address_byte_low");

@@ -126,7 +126,7 @@ void execute_parallel(void (*function1)(void),void (*function2)(void))
 
 //naked: tells gcc not to modify the stack while entering this
 ISR(TIMER0_COMPA_vect,ISR_NAKED) {
-    //We might be messing up the stack here...
+    //We are messing up the stack here...
     timer_ticks++;
     timer_ticks = timer_ticks % TIME_SLICE;
     
@@ -164,13 +164,13 @@ ISR(TIMER0_COMPA_vect,ISR_NAKED) {
         //}
         
         //If it's the first swap, swap to B for the first time by jumping to it.
-        //if(first_swap){
+        //if(first_swap){ TODO: commenting this in makes it break. Assembly code indicates this is overwriting registers. We should save the stack at the very start to ensure we don't write over the top of anything.
             //Load thread_B's address into two registers (low and high byte), and push them onto the stack for reti(); to return to
-        asm("lds r24,thread_B");
-        asm("lds r25,thread_B+1");
-        asm("push r24");
-        asm("push r25");
-        //first_swap = FALSE;
+            asm("lds r24,thread_B");
+            asm("lds r25,thread_B+1");
+            asm("push r24");
+            asm("push r25");
+            first_swap = FALSE;
 	    //}else{
 	        //RESTORE_CONTEXT();
 	    //}

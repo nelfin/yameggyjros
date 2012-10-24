@@ -41,8 +41,6 @@ void init_multithread(void)
     uint16_t thread_B_SP = RAMEND/2;
     swapped_sph_B = (uint8_t) (thread_B_SP & 0x00ff );
     swapped_spl_B = (uint8_t) (thread_B_SP & 0xff00 ) >> 8;
-    serial_putdebug("B SP Low",swapped_spl_B);
-    serial_putdebug("B SP High",swapped_sph_B);
     
     //Initialise the tracking boolean
     thread_A_active = TRUE;
@@ -70,6 +68,7 @@ void execute_parallel(void (*function1)(void),void (*function2)(void))
     asm("in r0, __SREG__");\
     asm("push r0");\
     asm("push r1");\
+    asm("clr r1");\
     asm("push r2");\
     asm("push r3");\
     asm("push r4");\
@@ -139,7 +138,6 @@ void execute_parallel(void (*function1)(void),void (*function2)(void))
 
 //naked: tells gcc not to modify the stack while entering this
 ISR(TIMER0_COMPA_vect,ISR_NAKED) {
-    asm("ISRinterrupt:");
     //Save the registers to the stack at the start to ensure we don't mess up the stack
     SAVE_CONTEXT();
     
@@ -169,14 +167,18 @@ ISR(TIMER0_COMPA_vect,ISR_NAKED) {
                 swapped_sph_B = SPH;
                 swapped_spl_B = SPL;
                 
-                //Make the current stack pointers B's (initially, half way down the stack)
+                //Make the current stack pointers A's
                 SPH = swapped_sph_A;
                 SPL = swapped_spl_A;
             }
         }else{
             first_switch = FALSE;
+            swapped_spl_A = SPL;
+            swapped_sph_A = SPH;
+            
             SPH = swapped_sph_B;
             SPL = swapped_spl_B;
+            
             asm("lds r24,thread_B");
             asm("lds r25,thread_B+1");
             asm("push r24");
@@ -189,3 +191,4 @@ ISR(TIMER0_COMPA_vect,ISR_NAKED) {
     RESTORE_CONTEXT();
     reti();
 }
+

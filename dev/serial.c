@@ -11,7 +11,7 @@
 Simple serial output for the meggyjr
 Eric McCreath 2012  - GPLv3
 To connect to this ouput, execute
-minicom -b 9600 -D /dev/ttyUSB0
+minicom -b -w 9600 -D /dev/ttyUSB0
 On a separate terminal
 */
 void initialise_serial(void) {

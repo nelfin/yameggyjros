@@ -3,8 +3,8 @@
 #include "multithread.h"
 
 #define TIME_SLICE 200 //Arbritrary time units at the moment
-#define TRUE 0
-#define FALSE 1
+#define TRUE 1
+#define FALSE 0
 static int timer_ticks = 0;
 static int swapped_sph_A;
 static int swapped_spl_A;
@@ -15,8 +15,8 @@ static int swapped_spl_B;
 static void (*thread_A)(void);
 static void (*thread_B)(void);
 
-static int thread_A_active;
-static int first_swap;
+static uint8_t thread_A_active;
+static uint8_t first_switch;
 
 void init_multithread(void)
 {
@@ -33,6 +33,10 @@ void init_multithread(void)
     TCCR0B |= (1 << CS02);
     // set prescaler to 256 and start the timer
     
+    //Initialise thread A's stack pointer
+    swapped_sph_A = SPH;
+    swapped_spl_A = SPL;
+    
     //Initialise the bottom half of the stack for our B thread
     uint16_t thread_B_SP = RAMEND/2;
     swapped_sph_B = (uint8_t) (thread_B_SP & 0x00ff );
@@ -40,9 +44,18 @@ void init_multithread(void)
     serial_putdebug("B SP Low",swapped_spl_B);
     serial_putdebug("B SP High",swapped_sph_B);
     
-    //Initialise the context tracking booleans
+    //Initialise the tracking boolean
     thread_A_active = TRUE;
-    first_swap = TRUE;
+    first_switch = TRUE;
+    
+    //We're now 2 higher on the stack, update the stack pointer
+    swapped_sph_B = SPH;
+    swapped_spl_B = SPL;
+    
+    //And then return to where we were going (at the start read for thread A)
+    SPH = swapped_sph_A;
+    SPL = swapped_spl_A;
+    
 }
 
 void execute_parallel(void (*function1)(void),void (*function2)(void))
@@ -126,54 +139,53 @@ void execute_parallel(void (*function1)(void),void (*function2)(void))
 
 //naked: tells gcc not to modify the stack while entering this
 ISR(TIMER0_COMPA_vect,ISR_NAKED) {
-    //We are messing up the stack here...
-    timer_ticks++;
-    timer_ticks = timer_ticks % TIME_SLICE;
+    asm("ISRinterrupt:");
+    //Save the registers to the stack at the start to ensure we don't mess up the stack
+    SAVE_CONTEXT();
     
-    thread_A_active = !thread_A_active;
+    timer_ticks++;
+    if(timer_ticks > TIME_SLICE){
+        timer_ticks = 0;
+    }
     if(timer_ticks==0){
         //----------Context switch----------
         //Keep track of which thread is active
-        //thread_A_active = !thread_A_active;
+        thread_A_active = !thread_A_active;
         
-        
-        //if(!thread_A_active){
-            /*--- A goes out, B comes in ---*/
-            //Save the stack pointers to kernel space
-            swapped_sph_A = SPH;
-            swapped_spl_A = SPL;
-            
-            //Save the registers to the stack
-            SAVE_CONTEXT();
-            
-            //Make the current stack pointers B's (initially, half way down the stack)
+        if(!first_switch){
+            if(!thread_A_active){
+                //--- A goes out, B comes in ---//
+                //Save the stack pointers to kernel space
+                swapped_sph_A = SPH; 
+                swapped_spl_A = SPL;
+                
+                //Make the current stack pointers B's (initially, half way down the stack)
+                SPH = swapped_sph_B;
+                SPL = swapped_spl_B;
+                
+            }else{
+                //--- B goes out, A comes in ---//
+                //Save the stack pointers to kernel space
+                swapped_sph_B = SPH;
+                swapped_spl_B = SPL;
+                
+                //Make the current stack pointers B's (initially, half way down the stack)
+                SPH = swapped_sph_A;
+                SPL = swapped_spl_A;
+            }
+        }else{
+            first_switch = FALSE;
             SPH = swapped_sph_B;
             SPL = swapped_spl_B;
-        //}else{
-            /*--- B goes out, A comes in ---
-            //Save the stack pointers to kernel space
-            swapped_sph_B = SPH;
-            swapped_spl_B = SPL;
-            
-            //Save the registers to the stack
-            SAVE_CONTEXT();
-            
-            //Make the current stack pointers B's (initially, half way down the stack)
-            SPH = swapped_sph_A;
-            SPL = swapped_spl_A;*/
-        //}
-        
-        //If it's the first swap, swap to B for the first time by jumping to it.
-        //if(first_swap){ TODO: commenting this in makes it break. Assembly code indicates this is overwriting registers. We should save the stack at the very start to ensure we don't write over the top of anything.
-            //Load thread_B's address into two registers (low and high byte), and push them onto the stack for reti(); to return to
             asm("lds r24,thread_B");
             asm("lds r25,thread_B+1");
             asm("push r24");
             asm("push r25");
-            first_swap = FALSE;
-	    //}else{
-	        //RESTORE_CONTEXT();
-	    //}
+            reti();
+        }
     }
+        
+    //We've just changed the SP to the correct place, or not switched
+    RESTORE_CONTEXT();
     reti();
 }

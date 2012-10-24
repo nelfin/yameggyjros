@@ -2,10 +2,8 @@
 #include <avr/interrupt.h>
 #include "multithread.h"
 
-#define TIME_SLICE 200 //Arbritrary time units at the moment
 #define TRUE 1
 #define FALSE 0
-static int timer_ticks = 0;
 static int swapped_sph_A;
 static int swapped_spl_A;
 
@@ -129,53 +127,47 @@ ISR(TIMER0_COMPA_vect,ISR_NAKED) {
     //Save the registers to the stack at the start to ensure we don't mess up the stack
     SAVE_CONTEXT();
     
-    timer_ticks++;
-    if(timer_ticks > TIME_SLICE){
-        timer_ticks = 0;
-    }
-    if(timer_ticks==0){
-        //----------Context switch----------
-        //Keep track of which thread is active
-        thread_A_active = !thread_A_active;
-        
-        if(!first_switch){
-            if(!thread_A_active){
-                //--- A goes out, B comes in ---//
-                //Save the stack pointers to kernel space
-                swapped_sph_A = SPH; 
-                swapped_spl_A = SPL;
-                
-                //Make the current stack pointers B's (initially, half way down the stack)
-                SPH = swapped_sph_B;
-                SPL = swapped_spl_B;
-                
-            }else{
-                //--- B goes out, A comes in ---//
-                //Save the stack pointers to kernel space
-                swapped_sph_B = SPH;
-                swapped_spl_B = SPL;
-                
-                //Make the current stack pointers A's
-                SPH = swapped_sph_A;
-                SPL = swapped_spl_A;
-            }
-        }else{
-            first_switch = FALSE;
+    //----------Context switch----------
+    //Keep track of which thread is active
+    thread_A_active = !thread_A_active;
+    
+    if(!first_switch){
+        if(!thread_A_active){
+            //--- A goes out, B comes in ---//
+            //Save the stack pointers to kernel space
+            swapped_sph_A = SPH; 
             swapped_spl_A = SPL;
-            swapped_sph_A = SPH;
             
+            //Make the current stack pointers B's (initially, half way down the stack)
             SPH = swapped_sph_B;
             SPL = swapped_spl_B;
             
-            asm("lds r24,thread_B");
-            asm("lds r25,thread_B+1");
-            asm("push r24");
-            asm("push r25");
-            reti();
+        }else{
+            //--- B goes out, A comes in ---//
+            //Save the stack pointers to kernel space
+            swapped_sph_B = SPH;
+            swapped_spl_B = SPL;
+            
+            //Make the current stack pointers A's
+            SPH = swapped_sph_A;
+            SPL = swapped_spl_A;
         }
+    }else{
+        first_switch = FALSE;
+        swapped_spl_A = SPL;
+        swapped_sph_A = SPH;
+        
+        SPH = swapped_sph_B;
+        SPL = swapped_spl_B;
+        
+        asm("lds r24,thread_B");
+        asm("lds r25,thread_B+1");
+        asm("push r24");
+        asm("push r25");
+        reti();
     }
         
-    //We've just changed the SP to the correct place, or not switched
+    //We've just changed the SP to the correct place
     RESTORE_CONTEXT();
     reti();
 }

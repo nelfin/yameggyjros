@@ -33,10 +33,6 @@ void init_multithread(void)
     TCCR0B |= (1 << CS02);
     // set prescaler to 256 and start the timer
     
-    //Initialise thread A's stack pointer
-    swapped_sph_A = SPH;
-    swapped_spl_A = SPL;
-    
     //Initialise the bottom half of the stack for our B thread
     uint16_t thread_B_SP = RAMEND/2;
     swapped_sph_B = (uint8_t) (thread_B_SP & 0x00ff );
@@ -45,14 +41,6 @@ void init_multithread(void)
     //Initialise the tracking boolean
     thread_A_active = TRUE;
     first_switch = TRUE;
-    
-    //We're now 2 higher on the stack, update the stack pointer
-    swapped_sph_B = SPH;
-    swapped_spl_B = SPL;
-    
-    //And then return to where we were going (at the start read for thread A)
-    SPH = swapped_sph_A;
-    SPL = swapped_spl_A;
     
 }
 

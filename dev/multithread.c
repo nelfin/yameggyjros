@@ -50,77 +50,81 @@ void execute_parallel(void (*function1)(void),void (*function2)(void))
 }
 
 #define SAVE_CONTEXT()\
-    asm("push r0");\
-    asm("in r0, __SREG__");\
-    asm("push r0");\
-    asm("push r1");\
-    asm("clr r1");\
-    asm("push r2");\
-    asm("push r3");\
-    asm("push r4");\
-    asm("push r5");\
-    asm("push r6");\
-    asm("push r7");\
-    asm("push r8");\
-    asm("push r9");\
-    asm("push r10");\
-    asm("push r11");\
-    asm("push r12");\
-    asm("push r13");\
-    asm("push r14");\
-    asm("push r15");\
-    asm("push r16");\
-    asm("push r17");\
-    asm("push r18");\
-    asm("push r19");\
-    asm("push r20");\
-    asm("push r21");\
-    asm("push r22");\
-    asm("push r23");\
-    asm("push r24");\
-    asm("push r25");\
-    asm("push r26");\
-    asm("push r27");\
-    asm("push r28");\
-    asm("push r29");\
-    asm("push r30");\
-    asm("push r31");\
-    
+    asm volatile ( \
+        "push r0\n\t" \
+        "in r0, __SREG__\n\t" \
+        "push r0\n\t" \
+        "push r1\n\t" \
+        "clr r1\n\t" \
+        "push r2\n\t" \
+        "push r3\n\t" \
+        "push r4\n\t" \
+        "push r5\n\t" \
+        "push r6\n\t" \
+        "push r7\n\t" \
+        "push r8\n\t" \
+        "push r9\n\t" \
+        "push r10\n\t" \
+        "push r11\n\t" \
+        "push r12\n\t" \
+        "push r13\n\t" \
+        "push r14\n\t" \
+        "push r15\n\t" \
+        "push r16\n\t" \
+        "push r17\n\t" \
+        "push r18\n\t" \
+        "push r19\n\t" \
+        "push r20\n\t" \
+        "push r21\n\t" \
+        "push r22\n\t" \
+        "push r23\n\t" \
+        "push r24\n\t" \
+        "push r25\n\t" \
+        "push r26\n\t" \
+        "push r27\n\t" \
+        "push r28\n\t" \
+        "push r29\n\t" \
+        "push r30\n\t" \
+        "push r31\n\t" \
+    );
+
 #define RESTORE_CONTEXT()\
-    asm("pop r31");\
-    asm("pop r30");\
-    asm("pop r29");\
-    asm("pop r28");\
-    asm("pop r27");\
-    asm("pop r26");\
-    asm("pop r25");\
-    asm("pop r24");\
-    asm("pop r23");\
-    asm("pop r22");\
-    asm("pop r21");\
-    asm("pop r20");\
-    asm("pop r19");\
-    asm("pop r18");\
-    asm("pop r17");\
-    asm("pop r16");\
-    asm("pop r15");\
-    asm("pop r14");\
-    asm("pop r13");\
-    asm("pop r12");\
-    asm("pop r11");\
-    asm("pop r10");\
-    asm("pop r9");\
-    asm("pop r8");\
-    asm("pop r7");\
-    asm("pop r6");\
-    asm("pop r5");\
-    asm("pop r4");\
-    asm("pop r3");\
-    asm("pop r2");\
-    asm("pop r1");\
-    asm("pop r0");\
-    asm("out __SREG__, r0");\
-    asm("pop r0");
+    asm volatile ( \
+        "pop r31\n\t" \
+        "pop r30\n\t" \
+        "pop r29\n\t" \
+        "pop r28\n\t" \
+        "pop r27\n\t" \
+        "pop r26\n\t" \
+        "pop r25\n\t" \
+        "pop r24\n\t" \
+        "pop r23\n\t" \
+        "pop r22\n\t" \
+        "pop r21\n\t" \
+        "pop r20\n\t" \
+        "pop r19\n\t" \
+        "pop r18\n\t" \
+        "pop r17\n\t" \
+        "pop r16\n\t" \
+        "pop r15\n\t" \
+        "pop r14\n\t" \
+        "pop r13\n\t" \
+        "pop r12\n\t" \
+        "pop r11\n\t" \
+        "pop r10\n\t" \
+        "pop r9\n\t" \
+        "pop r8\n\t" \
+        "pop r7\n\t" \
+        "pop r6\n\t" \
+        "pop r5\n\t" \
+        "pop r4\n\t" \
+        "pop r3\n\t" \
+        "pop r2\n\t" \
+        "pop r1\n\t" \
+        "pop r0\n\t" \
+        "out __SREG__, r0\n\t" \
+        "pop r0" \
+    );
 
 //naked: tells gcc not to modify the stack while entering this
 ISR(TIMER0_COMPA_vect,ISR_NAKED) {
@@ -160,10 +164,12 @@ ISR(TIMER0_COMPA_vect,ISR_NAKED) {
         SPH = swapped_sph_B;
         SPL = swapped_spl_B;
         
-        asm("lds r24,thread_B");
-        asm("lds r25,thread_B+1");
-        asm("push r24");
-        asm("push r25");
+        asm volatile (
+            "lds r24,thread_B\n\t"
+            "lds r25,thread_B+1\n\t"
+            "push r24\n\t"
+            "push r25\n\t"
+        );
         reti();
     }
         

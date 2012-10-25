@@ -34,21 +34,30 @@ static inline void set_column(uint8_t col, uint8_t colour, int height) {
 }
 
 void thread1(void){
-    int x = 0;
-    for(x = 0; x < 8; x++){
-        delay(60);
-        rgb_screen[0][x] = (pixel_t) (uint8_t) cff0000;
-        delay(60);
+    int x;
+    for (;;) {
+        for(x = 0; x < 8; x++){
+            delay(20);
+            rgb_screen[0][x] = (pixel_t) (uint8_t) cff0000;
+        }
+        for(x = 0; x < 8; x++){
+            delay(20);
+            rgb_screen[0][x] = (pixel_t) (uint8_t) c000000;
+        }
     }
-    
 }
 
 void thread2(void){
-    int x = 0;
-    for(x = 0; x < 8; x++){
-        delay(60);
-        rgb_screen[7][x] = (pixel_t) (uint8_t) cffff00;
-        delay(60);
+    int x;
+    for (;;) {
+        for(x = 0; x < 8; x++){
+            delay(20);
+            rgb_screen[7][x] = (pixel_t) (uint8_t) cffff00;
+        }
+        for(x = 0; x < 8; x++){
+            delay(20);
+            rgb_screen[7][x] = (pixel_t) (uint8_t) c000000;
+        }
     }
 }
 
@@ -56,9 +65,8 @@ int main(void) {
     initialise_screen();
     initialise_serial();
     init_multithread();
-    while(1){
-        execute_parallel(thread1,thread2);
-    }
+
+    execute_parallel(thread1, thread2);
 
     return 0;
 }

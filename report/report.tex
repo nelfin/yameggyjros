@@ -1,22 +1,22 @@
-\documentclass[pdftex,twoside,a4paper]{article}
-\usepackage[pdftex]{graphicx}
-\usepackage[margin=3.0cm]{geometry}
-\usepackage{times}
-\usepackage[english]{babel}
-\usepackage[normalem]{ulem}
-\usepackage{algorithm2e}
-\usepackage{amsfonts}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{tabularx}
-\usepackage{color}
-\usepackage{tabto}
+\documentclass[twoside,a4paper]{article}
 \usepackage{graphicx}
-\usepackage{hyperref}
-\usepackage{float}
-\usepackage{epstopdf}
-\usepackage{caption}
-\usepackage{subfigure}
+\usepackage[margin=3.0cm]{geometry}
+\usepackage{palatino}
+\usepackage[english]{babel}
+%\usepackage[normalem]{ulem}
+%\usepackage{algorithm2e}
+%\usepackage{amsfonts}
+%\usepackage{amsmath}
+%\usepackage{amssymb}
+%\usepackage{tabularx}
+%\usepackage{color}
+%\usepackage{tabto}
+%\usepackage{graphicx}
+%\usepackage{hyperref}
+%\usepackage{float}
+%\usepackage{epstopdf}
+%\usepackage{caption}
+%\usepackage{subfigure}
 
 \begin{document}
 
@@ -36,17 +36,17 @@
 
 \vspace{1.4cm}
 
-{ \huge \bfseries An Operating System for the Meggy Jr. RGB} \\
+{ \huge \bfseries An Operating System for the Meggy Jr. RGB}
 \vspace{1.4cm}
 \hrule
 \vspace{1.0cm}
 
-\textsc{\large COMP3300 - Operating Systems Implementation}\\
+\textsc{\large COMP3300 --- Operating Systems Implementation}
 
 \vspace{1.0cm}
 
 \vspace{1.0cm}
-{ \Large \bfseries Andrew Haigh - u4667010} \\
+{ \Large \bfseries Andrew Haigh --- u4667010}
 \begin{itemize}
 \item Screen Library
 \item Sound Library
@@ -54,21 +54,20 @@
 \item Multithread Library
 \end{itemize}
 \vspace{1.0cm}
-{ \Large \bfseries Joshua Nelson - u4850020} \\
+{ \Large \bfseries Joshua Nelson --- u4850020}
 \begin{itemize}
  \item EEPROM Library
  \item Keys Library
  \item Serial Library (Using Eric McCreath's example code)
  \item Multithread Library
 \end{itemize}
-\vspace{1.0cm}
 \vfill
 \begin{abstract}
 A rudimentary operating system for the Meggy Jr. RGB, a handheld device based on the Atmel AVR architecture. A library useful to game developers was created, including functions for interacting with the screen, sound, keys, memory, I/O, and multithreading.
 \end{abstract}
  
 \end{center}
- 
+
 \end{titlepage}
 
 \section*{Application Programmer's library}
@@ -79,9 +78,9 @@ The Keys Library defines names for each of the buttons, and allows a user to che
 The Serial library allows data to be sent over the Meggy Jr.'s serial cable, which is useful for debugging. Functions were created for sending strings and variables via the serial cable to a connected computer's terminal. This was used during the creation and debugging of the other code.
 
 \section*{Extension - EEPROM Library}
-A simple library that interfaced with the \texttt{avr/eeprom.h} header file was created. The way the user would interact with this library are via the \texttt{persistent\_memory} array, a 1KB array of data, and through the saving and loading functions. This array is not always consistent with the actual EEPROM memory however - save and load functions are provided for synchronising this array with the EEPROM memory. An alternative approach would be synchronisation when modifying this array, or synchronisation at set time intervals. These approaches have the disadvantage of not letting the user control when accessses to EEPROM memory occurs, which is important, as the EEPROM memory is only specified to be error free for up to 100,000 reads and writes, which is a low amount.\\
+A simple library that interfaced with the \texttt{avr/eeprom.h} header file was created. The way the user would interact with this library are via the \texttt{persistent\_memory} array, a 1KB array of data, and through the saving and loading functions. This array is not always consistent with the actual EEPROM memory however - save and load functions are provided for synchronising this array with the EEPROM memory. An alternative approach would be synchronisation when modifying this array, or synchronisation at set time intervals. These approaches have the disadvantage of not letting the user control when accessses to EEPROM memory occurs, which is important, as the EEPROM memory is only specified to be error free for up to 100,000 reads and writes, which is a low amount.
 
-Another feature of the library is the ability to take and load screenshots. This interacts with the Screen Library well, as it only needs to copy screen data from the \texttt{rgb\_screen} array to the \texttt{persistent\_memory} array, and then save the array to EEPROM memory (load and transfer in the opposite direction for loading screenshots).\\
+Another feature of the library is the ability to take and load screenshots. This interacts with the Screen Library well, as it only needs to copy screen data from the \texttt{rgb\_screen} array to the \texttt{persistent\_memory} array, and then save the array to EEPROM memory (load and transfer in the opposite direction for loading screenshots).
 
 One simplification that was made in the EEPROM memory implementation was the addressing - integer addresses are used for `file' locations, and users must be careful to avoid overwriting their own data. An improvement that could be made would be to implement a file table that allowed file names for accessing and storing data.
 \section*{Simple Game}
@@ -89,19 +88,19 @@ One simplification that was made in the EEPROM memory implementation was the add
 
 \section*{Multithreading}
 %%%Pretty sure this is more than half a page, feel free to delete rubbish lines. It's 2:23AM right now and I could easily have written junk.
-Our multithreading implementation is a pre-emptive multithreading library, which allows paralell execution of two `threads', implemented as functions. The maximum number of simultaneous threads was specified to be two for simplicity, but it the implementation for $n$ threads would be similar.\\
+Our multithreading implementation is a pre-emptive multithreading library, which allows paralell execution of two `threads', implemented as functions. The maximum number of simultaneous threads was specified to be two for simplicity, but it the implementation for $n$ threads would be similar.
 
 The function \texttt{execute\_parallel} is the user's main interface with the library. It takes two functions as it's arguments - the functions that we are to run in parallel. It saves the addresses of these functions, and begins to execute one of them, while setting a timer (\texttt{timer0}), and enabling an interrupt when the timer fires.
 
-When this occurs, all of the registers are pushed onto the stack. The library then saves the stack pointer in kernel space, and moves the stack pointer to be half way down the stack, which is the starting point for our second thread. The interrupt then returns control, but it returns control to the second thread (this change is done by modifying the return address on the stack).\\
+When this occurs, all of the registers are pushed onto the stack. The library then saves the stack pointer in kernel space, and moves the stack pointer to be half way down the stack, which is the starting point for our second thread. The interrupt then returns control, but it returns control to the second thread (this change is done by modifying the return address on the stack).
 
-At this point, we continue until we reach another interrupt, then push the registers back onto the stack, save the stack pointer, and return to the first thread's stack pointer. We pop the registers back to their appropriate places, and continue execution of this thread's code from where we left off.\\
+At this point, we continue until we reach another interrupt, then push the registers back onto the stack, save the stack pointer, and return to the first thread's stack pointer. We pop the registers back to their appropriate places, and continue execution of this thread's code from where we left off.
 
 This loop continues indefinitely. Since the context switches are triggered regularly, and we alternate between the two processes fairly, our scheduler implemented was the round-robin scheduler.
 
-Several simplifications were made in this implementation. It was assumed that threads do not terminate, and so parallel should contain some infinite loop to prevent them from completing execution. An extension could be to add a method of terminating a thread, which notified the context switching library of this change.\\
+Several simplifications were made in this implementation. It was assumed that threads do not terminate, and so parallel should contain some infinite loop to prevent them from completing execution. An extension could be to add a method of terminating a thread, which notified the context switching library of this change.
 
-The library is also not capable of running more than two threads simultaneously. This modification simplifies the implementation of the library substantially.\\
+The library is also not capable of running more than two threads simultaneously. This modification simplifies the implementation of the library substantially.
 
 It should also be noted that the second thread's stack starts at half way down the actual stack. If the first thread used up too much stack space (more than half of the total stack), it would begin to overwrite the second thread's stack space. An extension to the library could be to add a protection system to the memory regions.
 \end{document}

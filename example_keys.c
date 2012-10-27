@@ -2,6 +2,7 @@
 #include "dev/leds.c"
 #include "dev/serial.c"
 
+#include "lib/screen.c"
 #include "lib/colours.h"
 
 inline void delay(uint16_t ms) {
@@ -12,16 +13,6 @@ inline void delay(uint16_t ms) {
    }
 }
 
-void fill_screen(uint8_t colour) {
-    uint8_t i, j;
-    for (i = 0; i < 8; i++) {
-        for (j = 0; j < 8; j++) {
-            rgb_screen[i][j] = (pixel_t) colour;
-        }
-    }
-}
-
-//Saves, and loads a screenshot on startup
 int main(void) {
     initialise_screen();
     initialise_keys();

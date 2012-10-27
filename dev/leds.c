@@ -52,14 +52,15 @@ ISR(TIMER2_COMPA_vect) {
     uint8_t bits;
     uint8_t temp_pb, temp_pd;
 
-    if (++cycle >= (1 << S_C)) {
-        cycle = 0;
-        if (++current_col >= S_COLS) {
-            current_col = 0;
-            current_col_p = (pixel_t *) rgb_screen;
-        } else {
-            current_col_p += 8;
+    if (++current_col >= S_COLS) {
+        current_col = 0;
+        current_col_p = (pixel_t *) rgb_screen;
+        if (++cycle >= (1 << S_C)) {
+            cycle = 0;
+            even_pass ^= 1;
         }
+    } else {
+        current_col_p += 8;
     }
 
     /* Could there be some way to remove the screen/sound coupling? */
@@ -142,8 +143,7 @@ ISR(TIMER2_COMPA_vect) {
 
     } else {
         /* Only vBRIGHT light up on odd passes */
-        /* Don't light aux. LEDs on odd passes, save batteries? */
-        SPDR = 0;
+        SPDR = status_lights;
 
         /* Work backwards */
         ptr = current_col_p + 7;
@@ -234,5 +234,4 @@ ISR(TIMER2_COMPA_vect) {
     PORTB &= 251u;
 
     SPCR = 0;
-    even_pass ^= 1;
 }

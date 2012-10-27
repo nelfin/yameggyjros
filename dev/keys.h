@@ -1,7 +1,7 @@
 #ifndef KEYS_H
 #define KEYS_H
 
-typedef char key_t;
+typedef uint8_t key_t;
 //Keys
 //Assume the buttons are on the right and the D-pad is on the left
 #define D_RIGHT 0x20U

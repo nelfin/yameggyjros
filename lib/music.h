@@ -86,7 +86,7 @@
  * now it is exactly 84/500000, the number of ms that pass between each
  * TIMER2_COMPA_vect interrupt.
  */
-#define MS_PERIODS 1.68f
+#define MS_PERIODS 0.168f
 
 void play_tone(uint16_t tone, float ms);
 

@@ -135,8 +135,9 @@ int main(void) {
     enable_sound();
 
     for (;;) {
+        play_breakmeggy();
         pause_screen();
-        die_anim();
+        /*die_anim();*/
         /*play_tetris();*/
     }
 
@@ -191,33 +192,131 @@ void die_anim(void) {
     spiral_screen(c000000, 150);
 }
 
+/* breakmeggy constants */
+#define TICKS 200
+#define BALL_COLOUR (caa0000 & vDARK)
+
+/* left = ~RIGHT; down = ~UP */
 #define RIGHT 0x1u
-#define LEFT  0x2u
-#define UP    0x4u
-#define DOWN  0x8u
+#define UP    0x2u
+#define STOP  0x4u
+
+static void inline draw_paddle(uint8_t pos) {
+    fill_row(0, c000000);
+    rgb_screen[0+pos][0] = (pixel_t) (uint8_t) c005500;
+    rgb_screen[1+pos][0] = (pixel_t) (uint8_t) c005500;
+    rgb_screen[2+pos][0] = (pixel_t) (uint8_t) c005500;
+}
+
+static void inline draw_pixel(uint8_t x, uint8_t y, uint8_t colour) {
+    rgb_screen[x][y] = (pixel_t) colour;
+}
 
 void play_breakmeggy(void) {
+    uint8_t tick;
     uint8_t lives = 3;
+    key_t keyp, lastp = 0;
     /* - 0 1 2 3 4 5 - */
     uint8_t pos = 2;
     uint8_t ball_x = 3, ball_y = 1;
-    uint8_t ball_v = RIGHT | UP;
+    uint8_t ball_v = STOP;
+
+    /* 3 lives = 3 aux LEDs */
+    status_lights = LED_2 | LED_1 | LED_0;
+    draw_pixel(ball_x, ball_y, BALL_COLOUR);
+
     for (;;) {
-
+        draw_paddle(pos);
         /*
-         * Ball missed
+         * Paddle movement and time delay
          */
-        if (ball_y == 0) {
-            if (--lives == 0) {
-                break;
+        for (tick = 0; tick < TICKS; tick++) {
+            keyp = get_key_down();
+            if (keyp != lastp) {
+                switch (keyp) {
+                    case D_LEFT:
+                        pos = (pos > 0) ? pos - 1 : 0;
+                        if (ball_v == STOP) {
+                            draw_pixel(ball_x, ball_y, c000000);
+                            ball_x = (ball_x > 1) ? ball_x - 1 : 1;
+                            draw_pixel(ball_x, ball_y, BALL_COLOUR);
+                        }
+                        draw_paddle(pos);
+                        break;
+                    case D_RIGHT:
+                        pos = (pos < 5) ? pos + 1 : 5;
+                        if (ball_v == STOP) {
+                            draw_pixel(ball_x, ball_y, c000000);
+                            ball_x = (ball_x < 6) ? ball_x + 1 : 6;
+                            draw_pixel(ball_x, ball_y, BALL_COLOUR);
+                        }
+                        draw_paddle(pos);
+                        break;
+                    case B_RIGHT:
+                        if (ball_v == STOP) {
+                            ball_v = RIGHT | UP;
+                        }
+                        break;
+                    default:
+                        delay_us(2);
+                        break;
+                }
             }
-            fill_screen(c550000);
-            delay(200);
-
+            lastp = keyp;
+            delay(20);
+        }
+        /*
+         * Update world if ball is moving
+         */
+        if (ball_v != STOP) {
+            /*
+             * Clear old ball position
+             */
+            draw_pixel(ball_x, ball_y, c000000);
+            /*
+             * Apply standard ball velocity
+             */
+            ball_x = (ball_v & RIGHT) ? ball_x + 1 : ball_x - 1;
+            ball_y = (ball_v & UP) ? ball_y + 1 : ball_y - 1;
+            if (ball_x == 7) {
+                ball_v &= ~RIGHT;
+            }
+            if (ball_x == 0) {
+                ball_v |= RIGHT;
+            }
+            if (ball_y == 7) {
+                ball_v &= ~UP;
+            }
+            /*
+             * Check paddle hit
+             */
+            if (ball_y == 1 && (ball_x >= pos && ball_x <= pos + 2)) {
+                ball_v |= UP;
+            }
+            /*
+             * Ball missed
+             */
+            if (ball_y == 0) {
+                die_anim();
+                if (--lives == 0) {
+                    break;
+                }
+                /*
+                 * Re-initialise game state
+                 */
+                pos = 2;
+                ball_x = 3, ball_y = 1;
+                ball_v = STOP;
+                status_lights = LED_0;
+                if (lives == 2) {
+                    status_lights |= LED_1;
+                }
+            }
+            draw_pixel(ball_x, ball_y, BALL_COLOUR);
         }
     }
     /*
-     * Game over...
+     * Game over... ;_;
      */
 }
 

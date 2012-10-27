@@ -106,10 +106,11 @@ up the screen refresh interrupt vector and defines the internal pixel
 representation.
 
 The screen is completely refreshed at a rate of approximately 124\thinspace
-Hz. Precisely, the screen interrupt fires every 2,688 cycles (every 84 cycles
-with a prescaling of $\frac{1}{32}$) and a total of 48 firings are needed to
-completely refresh the screen, given 8 columns with 3 colour luminosity times
-2 brightness passes.  This gives a precise refresh rate of:
+Hz. Precisely, the screen is redrawn by a clear on compare interrupt utilising
+\texttt{Timer2} that fires every 2,688 cycles (every 84 cycles with a
+prescaling of $\frac{1}{32}$). A total of 48 firings are needed to completely
+refresh the screen, given 8 columns with 3 colour luminosity times 2
+brightness passes.  This gives a precise refresh rate of:
 
 \[
   \frac{16,000,000}{32} \div 84 \div (8 \times 3 \times 2) \approx
@@ -136,8 +137,17 @@ where V is brightness, and R, G, B are red, green, and blue respectively.
 \subsection*{Sound Library}
 \label{sub:Sound Library}
 
-\subsection*{Keys library}
-The Keys Library defines names for each of the buttons, and allows a user to
+The sound library consits of the two modules \texttt{dev/sound} and
+\texttt{lib/music}. The sound library is fairly simple and requires minimal
+CPU time as it is not interrupt driven. Instead, \texttt{Timer1} (which
+features 16-bit counters) is used to drive a PWM signal that is fed to the
+piezo buzzer, producing accurate tones. The \texttt{lib/music} module provides
+a more convenient interface allowing the user to specify a note name and
+duration in milliseconds. Tones stop playing automatically via a duration
+counter in the screen refresh interrupt.
+
+\subsection*{Keys Library}
+The keys library defines names for each of the buttons, and allows a user to
 check the specified key is down, wait for a specific key to be pressed, or to
 return the next key that is pressed. These functions were the ones deemed
 useful for an application developer.  The functions were implemented with busy
@@ -146,8 +156,8 @@ alternative would be to create a method that used interrupts for key presses,
 which has the advantage of avoiding the busy loops required for this
 implementation.
 
-\subsection*{Serial library}
-The Serial library allows data to be sent over the Meggy Jr.'s serial cable,
+\subsection*{Serial Library}
+The serial library allows data to be sent over the Meggy Jr.'s serial cable,
 which is useful for debugging. Functions were created for sending strings and
 variables via the serial cable to a connected computer's terminal. This was
 used during the creation and debugging of the other code.
@@ -156,8 +166,8 @@ used during the creation and debugging of the other code.
 A simple library that interfaced with the \texttt{avr/eeprom.h} header file
 was created. The way the user would interact with this library are via the
 \texttt{persistent\_memory} array, a 1KB array of data, and through the saving
-and loading functions. This array is not always consistent with the actual
-EEPROM memory however - save and load functions are provided for synchronising
+and loading functions. However, this array is not always consistent with the
+actual EEPROM memory: save and load functions are provided for synchronising
 this array with the EEPROM memory. An alternative approach would be
 synchronisation when modifying this array, or synchronisation at set time
 intervals. These approaches have the disadvantage of not letting the user

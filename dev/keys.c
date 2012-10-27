@@ -1,5 +1,4 @@
 #include "keys.h"
-#include "../lib/colours.h"
 #include <avr/io.h>
 
 void initialise_keys(){

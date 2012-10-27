@@ -1,5 +1,5 @@
-#include "keys.h"
 #include <avr/io.h>
+#include "keys.h"
 
 void initialise_keys(){
     PORTC = 255U;   // Set port c as pull ups

@@ -2,6 +2,8 @@
 #include "dev/leds.c"
 #include "dev/serial.c"
 
+#include "lib/colours.h"
+
 inline void delay(uint16_t ms) {
    uint16_t i,j;
    uint16_t loop = F_CPU / 17000;  // this is approximate and needs calabration.

@@ -68,7 +68,7 @@ uint8_t const pulse[16] = {
  * Game music
  * Note: at 120 BPM, one crochet = 500ms
  */
-uint16_t const tetris[] = {
+uint16_t const bgmusic[] = {
     tB4,   500,
     tGs4,  250,
     tA4,   250,
@@ -118,31 +118,28 @@ uint16_t const tetris[] = {
     tE4,   500
 };
 
-#define SONG (sizeof(tetris) / sizeof(uint16_t))
+#define SONG (sizeof(bgmusic) / sizeof(uint16_t))
 
 /*
  * Function prototypes, to make things easier/neater
  */
 void pause_screen(void);
 void spiral_screen(uint8_t colour, uint8_t slowdown);
-void die_anim(void);
+void die_anim(uint8_t slowdown);
 void play_breakmeggy(void);
-void play_tetris(void);
+void play_bgmusic(void);
 
 int main(void) {
+    initialise_multithreading();
     initialise_screen();
     initialise_keys();
     enable_sound();
 
     for (;;) {
-        play_breakmeggy();
         pause_screen();
-        /*die_anim();*/
-        /*play_tetris();*/
+        die_anim(150);
+        execute_parallel(play_breakmeggy, play_bgmusic);
     }
-
-    /*init_multithread();*/
-    /*execute_parallel(loading, play_tetris);*/
 
     return 0;
 }
@@ -185,15 +182,15 @@ void spiral_screen(uint8_t colour, uint8_t slowdown) {
     }
 }
 
-void die_anim(void) {
-    spiral_screen(c550000, 150);
-    spiral_screen(c550055, 150);
-    spiral_screen(c555555, 150);
-    spiral_screen(c000000, 150);
+void die_anim(uint8_t slowdown) {
+    spiral_screen(c550000, slowdown);
+    spiral_screen(c550055, slowdown);
+    spiral_screen(c555555, slowdown);
+    spiral_screen(c000000, slowdown);
 }
 
 /* breakmeggy constants */
-#define TICKS 200
+#define TICKS 100
 #define BALL_COLOUR (caa0000 & vDARK)
 
 /* left = ~RIGHT; down = ~UP */
@@ -328,7 +325,7 @@ void play_breakmeggy(void) {
                             (ball_x == 2*i || ball_x == 2*i+1)) {
                         blocks[i][ball_y - 4] = 0;
                         ball_v &= ~UP;
-                        play_tone(tCs4, 100);
+                        play_tone(tCs2, 100);
                         break;
                     }
                 }
@@ -337,7 +334,7 @@ void play_breakmeggy(void) {
              * Ball missed
              */
             if (ball_y == 0) {
-                die_anim();
+                die_anim(75);
                 if (--lives == 0) {
                     break;
                 }
@@ -370,6 +367,7 @@ void play_breakmeggy(void) {
 void pause_screen(void) {
     uint8_t shift, c;
     key_t keyp = 0;
+    status_lights = LED_NONE;
     while (!keyp) {
         for (shift = 16; shift > 0; --shift) {
             /* Glowing square */
@@ -395,17 +393,17 @@ void pause_screen(void) {
             }
             for (c = 0; (c < 10) && !keyp; c++) {
                 keyp = get_key_down();
-                delay(50);
+                delay(100);
             }
         }
     }
 }
 
-void play_tetris(void) {
+void play_bgmusic(void) {
     uint16_t i;
     for (;;) {
         for (i = 0; i < SONG; i += 2) {
-            play_tone(tetris[i], (float) tetris[i+1]);
+            play_tone(bgmusic[i], (float) bgmusic[i+1]);
             while (is_sound_playing());
             delay(100);
         }

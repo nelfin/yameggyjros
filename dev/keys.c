@@ -6,7 +6,11 @@ void initialise_keys(void) {
     DDRC = 0;       // Set port c as all inputs
 }
 
-int is_key_down(key_t key){
+key_t get_key_down(void) {
+    return (~(PINC)&63);
+}
+
+uint8_t is_key_down(key_t key){
     return (~(PINC)&63) & key;
 }
 

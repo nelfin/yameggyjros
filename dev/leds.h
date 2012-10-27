@@ -4,7 +4,7 @@
 /*
  * Auxilliary LEDs
  */
-static uint8_t status_lights;
+static uint8_t volatile status_lights;
 
 #define LED_0    0x01u
 #define LED_1    0x02u

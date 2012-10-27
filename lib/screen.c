@@ -16,4 +16,11 @@ static inline void fill_column(uint8_t col, uint8_t colour) {
     }
 }
 
+static inline void fill_row(uint8_t row, uint8_t colour) {
+    uint8_t j;
+    for (j = 0; j < 8; j++) {
+        rgb_screen[j][row] = (pixel_t) colour;
+    }
+}
+
 

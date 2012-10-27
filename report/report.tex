@@ -97,7 +97,7 @@ the pieces of hardware.
 \label{sub:Screen Library}
 
 The screen library consists of the \texttt{dev/leds} and \texttt{lib/screen}
-modules. The lower level interface exports 1 byte for the auxillary LEDs and a
+modules. The lower level interface exports 1 byte for the auxiliary LEDs and a
 shared memory region of 64 pixels that can be manipulated directly by the user
 if they know what they are doing. \texttt{lib/screen}, in concert with
 \texttt{lib/colours}, provides methods for filling the screen or a single
@@ -137,7 +137,7 @@ where V is brightness, and R, G, B are red, green, and blue respectively.
 \subsection*{Sound Library}
 \label{sub:Sound Library}
 
-The sound library consits of the two modules \texttt{dev/sound} and
+The sound library consists of the two modules \texttt{dev/sound} and
 \texttt{lib/music}. The sound library is fairly simple and requires minimal
 CPU time as it is not interrupt driven. Instead, \texttt{Timer1} (which
 features 16-bit counters) is used to drive a PWM signal that is fed to the
@@ -171,7 +171,7 @@ actual EEPROM memory: save and load functions are provided for synchronising
 this array with the EEPROM memory. An alternative approach would be
 synchronisation when modifying this array, or synchronisation at set time
 intervals. These approaches have the disadvantage of not letting the user
-control when accessses to EEPROM memory occurs, which is important, as the
+control when accesses to EEPROM memory occurs, which is important, as the
 EEPROM memory is only specified to be error free for up to 100,000 reads and
 writes, which is a low amount.
 
@@ -195,14 +195,14 @@ and storing data.
 %%% lines. It's 2:23AM right now and I could easily have written junk.
 
 Our multithreading implementation is a pre-emptive multithreading library,
-which allows paralell execution of two `threads', implemented as functions.
+which allows parallel execution of two `threads', implemented as functions.
 The maximum number of simultaneous threads was specified to be two for
 simplicity, but it the implementation for $n$ threads would be similar.
 
 The function \texttt{execute\_parallel} is the user's main interface with the
 library. It takes two functions as it's arguments - the functions that we are
 to run in parallel. It saves the addresses of these functions, and begins to
-execute one of them, while setting a timer (\texttt{timer0}), and enabling an
+execute one of them, while setting a timer (\texttt{Timer0}), and enabling an
 interrupt when the timer fires.
 
 When this occurs, all of the registers are pushed onto the stack. The library

@@ -16,21 +16,8 @@ static void (*thread_B)(void);
 static uint8_t thread_A_active;
 static uint8_t first_switch;
 
-void init_multithread(void)
+void initialise_multithreading(void)
 {
-    //serial_putdebug("SPH!",SPH);
-    //serial_putdebug("SPL!",SPL);
-    /* Prepping Timer 0 (8-bit resolution) for context switching */
-
-    // Set the Timer Mode to CTC
-    TCCR0A |= (1 << WGM01);
-    // Set the value that you want to count to
-    OCR0A = 0xF9;
-    TIMSK0 |= (1 << OCIE0A);    //Set the ISR COMPA vect
-    sei();         //enable interrupts
-    TCCR0B |= (1 << CS02);
-    // set prescaler to 256 and start the timer
-    
     //Initialise the bottom half of the stack for our B thread
     uint16_t thread_B_SP = RAMEND/2;
     swapped_sph_B = (uint8_t) (thread_B_SP & 0x00ff );
@@ -42,11 +29,30 @@ void init_multithread(void)
     
 }
 
+void enable_multithreading(void) {
+    /* Prepping Timer 0 (8-bit resolution) for context switching */
+
+    // Set the Timer Mode to CTC
+    TCCR0A |= (1 << WGM01);
+    // Set the value that you want to count to
+    OCR0A = 0xF9;
+    TIMSK0 |= (1 << OCIE0A);    //Set the ISR COMPA vect
+    sei();         //enable interrupts
+    TCCR0B |= (1 << CS02);
+    // set prescaler to 256 and start the timer
+}
+
+void disable_multithreading(void) {
+    TCCR0B = 0;
+}
+
 void execute_parallel(void (*function1)(void),void (*function2)(void))
 {
     thread_A = function1;
     thread_B = function2;
+    enable_multithreading();
     thread_A();
+    disable_multithreading();
 }
 
 #define SAVE_CONTEXT()\

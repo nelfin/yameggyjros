@@ -1,4 +1,4 @@
-#include "../dev/leds.h"
+#include "../dev/leds.c"
 
 static inline void fill_screen(uint8_t colour) {
     uint8_t i, j;

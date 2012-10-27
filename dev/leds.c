@@ -1,3 +1,6 @@
+#ifndef LEDS_C
+#define LEDS_C
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "leds.h"
@@ -235,3 +238,5 @@ ISR(TIMER2_COMPA_vect) {
 
     SPCR = 0;
 }
+
+#endif

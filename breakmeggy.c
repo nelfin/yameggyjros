@@ -212,7 +212,23 @@ static void inline draw_pixel(uint8_t x, uint8_t y, uint8_t colour) {
     rgb_screen[x][y] = (pixel_t) colour;
 }
 
+static void inline draw_blocks(uint8_t blocks[][4]) {
+    uint8_t i, j;
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4; j++) {
+            if (blocks[i][j]) {
+                draw_pixel(2*i, j+4, cff5500);
+                draw_pixel(2*i+1, j+4, cff5500);
+            } else {
+                draw_pixel(2*i, j+4, c000000);
+                draw_pixel(2*i+1, j+4, c000000);
+            }
+        }
+    }
+}
+
 void play_breakmeggy(void) {
+    uint8_t i;
     uint8_t tick;
     uint8_t lives = 3;
     key_t keyp, lastp = 0;
@@ -220,6 +236,13 @@ void play_breakmeggy(void) {
     uint8_t pos = 2;
     uint8_t ball_x = 3, ball_y = 1;
     uint8_t ball_v = STOP;
+    /* XXX: This could be packed if space becomes a serious issue */
+    uint8_t blocks[4][4] = {
+        { 1, 1, 1, 1 },
+        { 1, 1, 1, 1 },
+        { 1, 1, 1, 1 },
+        { 1, 1, 1, 1 },
+    };
 
     /* 3 lives = 3 aux LEDs */
     status_lights = LED_2 | LED_1 | LED_0;
@@ -227,6 +250,8 @@ void play_breakmeggy(void) {
 
     for (;;) {
         draw_paddle(pos);
+        draw_blocks(blocks);
+        draw_pixel(ball_x, ball_y, BALL_COLOUR);
         /*
          * Paddle movement and time delay
          */
@@ -292,6 +317,21 @@ void play_breakmeggy(void) {
              */
             if (ball_y == 1 && (ball_x >= pos && ball_x <= pos + 2)) {
                 ball_v |= UP;
+            }
+            /*
+             * Collision detection
+             */
+            if (ball_y > 3) {
+                /* Check block rows */
+                for (i = 0; i < 4; i++) {
+                    if (blocks[i][ball_y - 4] &&
+                            (ball_x == 2*i || ball_x == 2*i+1)) {
+                        blocks[i][ball_y - 4] = 0;
+                        ball_v &= ~UP;
+                        play_tone(tCs4, 100);
+                        break;
+                    }
+                }
             }
             /*
              * Ball missed

@@ -120,7 +120,13 @@ uint16_t const tetris[] = {
 
 #define SONG (sizeof(tetris) / sizeof(uint16_t))
 
+/*
+ * Function prototypes, to make things easier/neater
+ */
 void pause_screen(void);
+void spiral_screen(uint8_t colour, uint8_t slowdown);
+void die_anim(void);
+void play_breakmeggy(void);
 void play_tetris(void);
 
 int main(void) {
@@ -130,14 +136,89 @@ int main(void) {
 
     for (;;) {
         pause_screen();
-        fill_screen(c000000);
-        play_tetris();
+        die_anim();
+        /*play_tetris();*/
     }
 
     /*init_multithread();*/
     /*execute_parallel(loading, play_tetris);*/
 
     return 0;
+}
+
+/*
+ * Fill the screen with a colour by spiraling clockwise from the bottom left
+ * corner
+ */
+void spiral_screen(uint8_t colour, uint8_t slowdown) {
+    uint8_t i;
+    uint8_t k = 0, l = 0;
+    uint8_t m = 7, n = 7;
+    while (k <= m && l <= n) {
+        for (i = l; i <= n; i++) {
+            rgb_screen[k][i] = (pixel_t) colour;
+            delay(slowdown);
+        }
+        k++;
+        for (i = k; i <= m; i++) {
+            rgb_screen[i][n] = (pixel_t) colour;
+            delay(slowdown);
+        }
+        n--;
+        if (m >= k) {
+            for (i = n; i >= l; i--) {
+                rgb_screen[m][i] = (pixel_t) colour;
+                delay(slowdown);
+                /* Don't get caught out by underflow */
+                if (i == 0) {
+                    break;
+                }
+            }
+            m--;
+        }
+        for (i = m; i >= k; i--) {
+            rgb_screen[i][l] = (pixel_t) colour;
+            delay(slowdown);
+        }
+        l++;
+    }
+}
+
+void die_anim(void) {
+    spiral_screen(c550000, 150);
+    spiral_screen(c550055, 150);
+    spiral_screen(c555555, 150);
+    spiral_screen(c000000, 150);
+}
+
+#define RIGHT 0x1u
+#define LEFT  0x2u
+#define UP    0x4u
+#define DOWN  0x8u
+
+void play_breakmeggy(void) {
+    uint8_t lives = 3;
+    /* - 0 1 2 3 4 5 - */
+    uint8_t pos = 2;
+    uint8_t ball_x = 3, ball_y = 1;
+    uint8_t ball_v = RIGHT | UP;
+    for (;;) {
+
+        /*
+         * Ball missed
+         */
+        if (ball_y == 0) {
+            if (--lives == 0) {
+                break;
+            }
+            fill_screen(c550000);
+            delay(200);
+
+        }
+    }
+    /*
+     * Game over...
+     */
 }
 
 /*
